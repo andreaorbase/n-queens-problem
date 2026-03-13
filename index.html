@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>N-Queens Solver</h2>
+    <input type="number" id="sizeInput" value="8" min="1">
+    <button onclick="runSolver()">Solve</button>
+
+    <p id="stats"></p>
+    <pre id="boardDisplay" style="font-family: monospace; line-height: 1.2;"></pre>
+
+    <script>
+        function runSolver() {
+            const n = parseInt(document.getElementById('sizeInput').value);
+            const result = solve(n); // Calls the logic from Step 1
+            
+            document.getElementById('boardDisplay').innerText = result.display;
+            document.getElementById('stats').innerText = result.isEstimate 
+                ? "Estimated Solutions: " + result.count 
+                : "Total Solutions Found: " + result.count;
+        }
+        
+        // PASTE THE JAVASCRIPT FUNCTIONS (solveBacktracking, solveMinConflicts, etc.) HERE
+    </script>
+</body>
+</html>
