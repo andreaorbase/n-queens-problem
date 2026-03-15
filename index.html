@@ -1,16 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Scalable N-Queens</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #boardDisplay {
+            margin-top: 20px;
+        }
+        .board {
+            display: inline-grid;
+            border: 2px solid #333;
+            margin-bottom: 20px;
+        }
+        .cell {
+            width: 40px; 
+            height: 40px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
 </head>
 <body>
-    <h2>N-Queens Solver</h2>
-    <input type="number" id="sizeInput" value="8" min="1">
-    <button onclick="runSolver()">Solve</button>
-    <button id="nextBtn" onclick="showNext()" style="display:none;">Show Another Solution</button>
+    <div>
+        <input type="number" id="sizeInput" value="8" min="1">
+        <button onclick="runSolver()">Solve</button>
+        <button id="nextBtn" onclick="showNext()" style="display:none;">Show Another Solution</button>
+    </div>
 
     <p id="stats"></p>
-    <pre id="boardDisplay" style="font-family: monospace; line-height: 1.2; font-size: 18px;"></pre>
+    <div id="boardDisplay"></div>
 
     <script>
         let currentN = 0;
@@ -21,12 +47,11 @@
             const result = solve(n);
             
             if (result) {
-                document.getElementById('boardDisplay').innerText = result.display;
+                document.getElementById('boardDisplay').innerHTML = result.display;
                 document.getElementById('stats').innerText = result.isEstimate 
                     ? "Estimated Solutions: " + result.count 
                     : "Total Solutions Found: " + result.count;
                 
-                // Show "Next" button for n > 8
                 if (currentN > 8) {
                     document.getElementById('nextBtn').style.display = "inline";
                 } else {
@@ -40,9 +65,8 @@
         }
 
         function showNext() {
-            // Generate a new random solution (Min-Conflicts) for n > 8
             const solution = solveMinConflicts(currentN);
-            document.getElementById('boardDisplay').innerText = generateTextBoard(solution);
+            document.getElementById('boardDisplay').innerHTML = generateHTMLBoard(solution);
         }
 
         function solve(n) {
@@ -51,8 +75,8 @@
                 if (currentSolutions.length === 0) return null;
                 
                 let allBoardsDisplay = currentSolutions.map((sol, index) => 
-                    "Solution " + (index + 1) + ":\n" + generateTextBoard(sol)
-                ).join("\n");
+                    "<h3>Solution " + (index + 1) + ":</h3>" + generateHTMLBoard(sol)
+                ).join("");
 
                 return { 
                     display: allBoardsDisplay, 
@@ -63,7 +87,7 @@
                 const solution = solveMinConflicts(n);
                 const estimate = Math.pow(n * Math.exp(-1.942), n);
                 return { 
-                    display: generateTextBoard(solution), 
+                    display: generateHTMLBoard(solution), 
                     count: estimate.toExponential(2), 
                     isEstimate: true 
                 };
@@ -101,7 +125,6 @@
 
         function solveMinConflicts(n, maxSteps = 1000) {
             let queens = Array.from({length: n}, (_, i) => i);
-            // Shuffle
             for (let i = n - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [queens[i], queens[j]] = [queens[j], queens[i]];
@@ -132,18 +155,34 @@
                 }
                 queens[row] = bestCols[Math.floor(Math.random() * bestCols.length)];
             }
-            return solveMinConflicts(n); // Simple restart if stuck
+            return solveMinConflicts(n); 
         }
 
-        function generateTextBoard(queens) {
+        function generateHTMLBoard(queens) {
             let n = queens.length;
-            let res = "";
+            let html = `<div class="board" style="grid-template-columns: repeat(${n}, 40px);">`;
+            
             for (let i = 0; i < n; i++) {
-                let row = new Array(n).fill(".");
-                row[queens[i]] = "Q";
-                res += row.join(" ") + "\n";
+                for (let j = 0; j < n; j++) {
+                    let isWhite = (i + j) % 2 === 0;
+                    let hasQueen = queens[i] === j;
+                    let imageSrc = "";
+
+                    if (isWhite && hasQueen) {
+                        imageSrc = "src/queen_in_white.png";
+                    } else if (!isWhite && hasQueen) {
+                        imageSrc = "src/queen_in_black.png";
+                    } else if (isWhite && !hasQueen) {
+                        imageSrc = "src/white_square.png";
+                    } else {
+                        imageSrc = "src/black_square.png";
+                    }
+                    
+                    html += `<div class="cell"><img src="${imageSrc}" style="width: 100%; height: 100%; display: block;"></div>`;
+                }
             }
-            return res;
+            html += `</div>`;
+            return html;
         }
     </script>
 </body>
