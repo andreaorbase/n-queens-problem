@@ -1,25 +1,149 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <title>Scalable N-Queens</title>
+</head>
 <body>
     <h2>N-Queens Solver</h2>
     <input type="number" id="sizeInput" value="8" min="1">
     <button onclick="runSolver()">Solve</button>
+    <button id="nextBtn" onclick="showNext()" style="display:none;">Show Another Solution</button>
 
     <p id="stats"></p>
-    <pre id="boardDisplay" style="font-family: monospace; line-height: 1.2;"></pre>
+    <pre id="boardDisplay" style="font-family: monospace; line-height: 1.2; font-size: 18px;"></pre>
 
     <script>
+        let currentSolutions = [];
+        let currentIndex = 0;
+        let currentN = 0;
+
         function runSolver() {
             const n = parseInt(document.getElementById('sizeInput').value);
-            const result = solve(n); // Calls the logic from Step 1
+            currentN = n;
+            currentIndex = 0;
+            const result = solve(n);
             
-            document.getElementById('boardDisplay').innerText = result.display;
-            document.getElementById('stats').innerText = result.isEstimate 
-                ? "Estimated Solutions: " + result.count 
-                : "Total Solutions Found: " + result.count;
+            if (result) {
+                document.getElementById('boardDisplay').innerText = result.display;
+                document.getElementById('stats').innerText = result.isEstimate 
+                    ? "Estimated Solutions: " + result.count 
+                    : "Total Solutions Found: " + result.count;
+                
+                // Show "Next" button if solutions exist
+                document.getElementById('nextBtn').style.display = "inline";
+            } else {
+                document.getElementById('boardDisplay').innerText = "No solution found.";
+                document.getElementById('stats').innerText = "";
+            }
         }
-        
-        // PASTE THE JAVASCRIPT FUNCTIONS (solveBacktracking, solveMinConflicts, etc.) HERE
+
+        function showNext() {
+            if (currentN <= 8) {
+                // Cycle through pre-calculated backtracking solutions
+                currentIndex = (currentIndex + 1) % currentSolutions.length;
+                document.getElementById('boardDisplay').innerText = generateTextBoard(currentSolutions[currentIndex]);
+            } else {
+                // Generate a fresh random solution using Min-Conflicts
+                const solution = solveMinConflicts(currentN);
+                document.getElementById('boardDisplay').innerText = generateTextBoard(solution);
+            }
+        }
+
+        function solve(n) {
+            if (n >= 1 && n <= 8) {
+                currentSolutions = solveBacktracking(n);
+                if (currentSolutions.length === 0) return null;
+                return { 
+                    display: generateTextBoard(currentSolutions[0]), 
+                    count: currentSolutions.length,
+                    isEstimate: false 
+                };
+            } else if (n > 8) {
+                const solution = solveMinConflicts(n);
+                const estimate = Math.pow(n * Math.exp(-1.942), n);
+                return { 
+                    display: generateTextBoard(solution), 
+                    count: estimate.toExponential(2), 
+                    isEstimate: true 
+                };
+            }
+            return null;
+        }
+
+        function solveBacktracking(n) {
+            const solutions = [];
+            const board = new Array(n).fill(-1);
+
+            function isSafe(row, col) {
+                for (let i = 0; i < row; i++) {
+                    if (board[i] === col || Math.abs(board[i] - col) === Math.abs(i - row)) return false;
+                }
+                return true;
+            }
+
+            function backtrack(row) {
+                if (row === n) {
+                    solutions.push([...board]);
+                    return;
+                }
+                for (let col = 0; col < n; col++) {
+                    if (isSafe(row, col)) {
+                        board[row] = col;
+                        backtrack(row + 1);
+                        board[row] = -1;
+                    }
+                }
+            }
+            backtrack(0);
+            return solutions;
+        }
+
+        function solveMinConflicts(n, maxSteps = 1000) {
+            let queens = Array.from({length: n}, (_, i) => i);
+            // Shuffle
+            for (let i = n - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [queens[i], queens[j]] = [queens[j], queens[i]];
+            }
+
+            function getConflicts(row, col) {
+                let count = 0;
+                for (let i = 0; i < n; i++) {
+                    if (i === row) continue;
+                    if (queens[i] === col || Math.abs(queens[i] - col) === Math.abs(i - row)) count++;
+                }
+                return count;
+            }
+
+            for (let step = 0; step < maxSteps; step++) {
+                let conflicted = [];
+                for (let i = 0; i < n; i++) {
+                    if (getConflicts(i, queens[i]) > 0) conflicted.push(i);
+                }
+                if (conflicted.length === 0) return queens;
+
+                let row = conflicted[Math.floor(Math.random() * conflicted.length)];
+                let minConf = n, bestCols = [];
+                for (let col = 0; col < n; col++) {
+                    let c = getConflicts(row, col);
+                    if (c < minConf) { minConf = c; bestCols = [col]; }
+                    else if (c === minConf) { bestCols.push(col); }
+                }
+                queens[row] = bestCols[Math.floor(Math.random() * bestCols.length)];
+            }
+            return solveMinConflicts(n); // Simple restart if stuck
+        }
+
+        function generateTextBoard(queens) {
+            let n = queens.length;
+            let res = "";
+            for (let i = 0; i < n; i++) {
+                let row = new Array(n).fill(".");
+                row[queens[i]] = "Q";
+                res += row.join(" ") + "\n";
+            }
+            return res;
+        }
     </script>
 </body>
 </html>
