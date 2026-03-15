@@ -39,11 +39,11 @@
 
         function showNext() {
             if (currentN <= 8) {
-                // Cycle through pre-calculated backtracking solutions
+                // Cycle through pre-calculated solutions (Backtracking)
                 currentIndex = (currentIndex + 1) % currentSolutions.length;
                 document.getElementById('boardDisplay').innerText = generateTextBoard(currentSolutions[currentIndex]);
             } else {
-                // Generate a fresh random solution using Min-Conflicts
+                // Generate a new random solution (Min-Conflicts)
                 const solution = solveMinConflicts(currentN);
                 document.getElementById('boardDisplay').innerText = generateTextBoard(solution);
             }
