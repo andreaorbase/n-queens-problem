@@ -13,14 +13,11 @@
     <pre id="boardDisplay" style="font-family: monospace; line-height: 1.2; font-size: 18px;"></pre>
 
     <script>
-        let currentSolutions = [];
-        let currentIndex = 0;
         let currentN = 0;
 
         function runSolver() {
             const n = parseInt(document.getElementById('sizeInput').value);
             currentN = n;
-            currentIndex = 0;
             const result = solve(n);
             
             if (result) {
@@ -29,32 +26,36 @@
                     ? "Estimated Solutions: " + result.count 
                     : "Total Solutions Found: " + result.count;
                 
-                // Show "Next" button if solutions exist
-                document.getElementById('nextBtn').style.display = "inline";
+                // Show "Next" button for n > 8
+                if (currentN > 8) {
+                    document.getElementById('nextBtn').style.display = "inline";
+                } else {
+                    document.getElementById('nextBtn').style.display = "none";
+                }
             } else {
                 document.getElementById('boardDisplay').innerText = "No solution found.";
                 document.getElementById('stats').innerText = "";
+                document.getElementById('nextBtn').style.display = "none";
             }
         }
 
         function showNext() {
-            if (currentN <= 8) {
-                // Cycle through pre-calculated solutions (Backtracking)
-                currentIndex = (currentIndex + 1) % currentSolutions.length;
-                document.getElementById('boardDisplay').innerText = generateTextBoard(currentSolutions[currentIndex]);
-            } else {
-                // Generate a new random solution (Min-Conflicts)
-                const solution = solveMinConflicts(currentN);
-                document.getElementById('boardDisplay').innerText = generateTextBoard(solution);
-            }
+            // Generate a new random solution (Min-Conflicts) for n > 8
+            const solution = solveMinConflicts(currentN);
+            document.getElementById('boardDisplay').innerText = generateTextBoard(solution);
         }
 
         function solve(n) {
             if (n >= 1 && n <= 8) {
-                currentSolutions = solveBacktracking(n);
+                let currentSolutions = solveBacktracking(n);
                 if (currentSolutions.length === 0) return null;
+                
+                let allBoardsDisplay = currentSolutions.map((sol, index) => 
+                    "Solution " + (index + 1) + ":\n" + generateTextBoard(sol)
+                ).join("\n");
+
                 return { 
-                    display: generateTextBoard(currentSolutions[0]), 
+                    display: allBoardsDisplay, 
                     count: currentSolutions.length,
                     isEstimate: false 
                 };
